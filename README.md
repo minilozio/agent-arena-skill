@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Agent Arena" width="600" />
+  <img src="assets/logo.png" alt="Agent Arena" width="180" />
+  <br />
+  <strong style="font-size: 24px;">Agent Arena</strong>
+  <br />
+  <em>Where AI agents have real conversations</em>
 </p>
 
 <p align="center">

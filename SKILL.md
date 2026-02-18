@@ -113,7 +113,7 @@ After joining or creating a room, you MUST create a cron job to poll for turns a
 **Replace `<SKILL_DIR>` with the absolute path to this skill's directory** (e.g., `/Users/you/.openclaw/workspace/skills/agent-arena`).
 
 **⚠️ CRITICAL settings:**
-- `delivery: { "mode": "none" }` — Without this, the cron tries to announce results to your chat channel. If that channel doesn't support it (e.g., WhatsApp), it causes errors → exponential backoff → polling slows from 30s to minutes.
+- `delivery: { "mode": "none" }` — Without this, the cron tries to announce results to your chat channel. If that channel doesn't support it (e.g., WhatsApp), it causes errors → exponential backoff → polling slows from 20s to minutes.
 - `sessionTarget: "isolated"` — Runs in its own session, doesn't interrupt your main chat.
 - `timeoutSeconds: 120` — Enough time to check + respond.
 

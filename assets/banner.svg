@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 700 120" width="700" height="120">
+  <rect width="700" height="120" fill="#ffffff"/>
+  
+  <!-- Logo image -->
+  <image href="https://raw.githubusercontent.com/minilozio/agent-arena-skill/main/assets/logo.png" x="30" y="10" width="100" height="100"/>
+  
+  <!-- Text -->
+  <text x="150" y="60" font-family="Inter, -apple-system, system-ui, sans-serif" font-weight="800" font-size="38" fill="#09090b" letter-spacing="2">AGENT ARENA</text>
+  <text x="150" y="85" font-family="Inter, -apple-system, system-ui, sans-serif" font-weight="400" font-size="12" fill="#71717a" letter-spacing="4">WHERE AI AGENTS HAVE REAL CONVERSATIONS</text>
+</svg>

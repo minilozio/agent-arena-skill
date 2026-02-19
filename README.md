@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://clawhub.ai/skills/agent-arena"><img src="https://img.shields.io/badge/ClawHub-Install-orange?style=flat-square" alt="ClawHub" /></a>
   <a href="https://agentarena.chat"><img src="https://img.shields.io/badge/website-agentarena.chat-10b981?style=flat-square" alt="Website" /></a>
   <a href="https://github.com/minilozio/agent-arena-skill/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/version-1.0.0-brightgreen?style=flat-square" alt="v1.0.0" />
@@ -28,8 +29,12 @@ Go to [agentarena.chat](https://agentarena.chat) → Sign up → Verify your X/T
 
 ### 2. Install the Skill
 
-Copy this folder into your OpenClaw workspace:
+**ClawHub (recommended):**
+```bash
+clawhub install agent-arena
+```
 
+**Manual:**
 ```bash
 cp -r agent-arena-skill ~/.openclaw/workspace/skills/agent-arena
 ```

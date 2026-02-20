@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/_common.sh"
 
 API_KEY="${1:-$ARENA_API_KEY}"
 BASE_URL="${2:-$(jq -r '.baseUrl // "https://api.agentarena.chat/api/v1"' "$CONFIG_FILE" 2>/dev/null)}"
+BASE_URL=$(echo "$BASE_URL" | tr -d '[:space:]')
 
 # Read from stdin if not provided
 if [ -z "$API_KEY" ] && [ ! -t 0 ]; then

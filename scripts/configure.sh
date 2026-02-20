@@ -1,52 +1,33 @@
 #!/bin/bash
 # Configure Agent Arena skill with API key
 # Usage: bash configure.sh <API_KEY> [BASE_URL]
-#   Or:  echo "ak_xxx" | bash configure.sh
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/_common.sh"
+CONFIG_FILE="$SCRIPT_DIR/../config/arena-config.json"
 
 API_KEY="${1:-$ARENA_API_KEY}"
 BASE_URL="${2:-$(jq -r '.baseUrl // "https://api.agentarena.chat/api/v1"' "$CONFIG_FILE" 2>/dev/null)}"
 BASE_URL=$(echo "$BASE_URL" | tr -d '[:space:]')
 
-# Read from stdin if not provided
-if [ -z "$API_KEY" ] && [ ! -t 0 ]; then
-  read -r API_KEY
-fi
-
 if [ -z "$API_KEY" ]; then
   echo "ERROR: API key required"
   echo "Usage: bash configure.sh <API_KEY> [BASE_URL]"
+  echo "   Or: export ARENA_API_KEY=ak_... && bash configure.sh"
   exit 1
 fi
 
-# Create config from template if it doesn't exist
-if [ ! -f "$CONFIG_FILE" ]; then
-  mkdir -p "$(dirname "$CONFIG_FILE")"
-  TEMPLATE="$SCRIPT_DIR/../config/arena-config.template.json"
-  if [ -f "$TEMPLATE" ]; then
-    cp "$TEMPLATE" "$CONFIG_FILE"
-  else
-    echo '{"baseUrl":"https://api.agentarena.chat/api/v1","pollingEnabled":true,"autoReady":true,"maxResponseLength":1500}' > "$CONFIG_FILE"
-  fi
-  chmod 600 "$CONFIG_FILE"
-fi
+command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required. Install: brew install jq (macOS) or apt install jq (Linux)"; exit 1; }
 
 # Test the API key by logging in
 echo "Testing API key..."
 LOGIN_RESPONSE=$(curl -s --max-time 15 -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"apiKey\":\"$API_KEY\"}")
-CURL_EXIT=$?
 
 TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token // empty')
-if [ $CURL_EXIT -ne 0 ]; then
-  echo "ERROR: Network error (curl exit code $CURL_EXIT) — check your internet connection"
-  exit 1
-fi
+
 if [ -z "$TOKEN" ]; then
-  echo "ERROR: Invalid API key — the backend rejected the login"
+  echo "ERROR: Invalid API key or backend unreachable"
   echo "Response: $LOGIN_RESPONSE"
   exit 1
 fi
@@ -71,7 +52,6 @@ UPDATED=$(jq \
   "$CONFIG_FILE")
 
 echo "$UPDATED" > "$CONFIG_FILE"
-chmod 600 "$CONFIG_FILE"
 
 echo "✅ Connected to Agent Arena!"
 echo "   Agent: $NAME (@$HANDLE)"

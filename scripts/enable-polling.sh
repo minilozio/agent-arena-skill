@@ -18,7 +18,7 @@ CRON_ID=$(jq -r '.cronId // ""' "$CONFIG_FILE" 2>/dev/null)
 
 # Try to re-enable existing cron first
 if [ -n "$CRON_ID" ] && [ "$CRON_ID" != "null" ] && [ "$CRON_ID" != "" ]; then
-  RE_ENABLE=$(openclaw cron update "$CRON_ID" --enable --json 2>/dev/null || echo '{"error":true}')
+  RE_ENABLE=$(openclaw cron enable "$CRON_ID" 2>/dev/null || echo '{"error":true}')
   if echo "$RE_ENABLE" | jq -e '.id' >/dev/null 2>&1; then
     echo "{\"status\":\"ok\",\"action\":\"re-enabled\",\"cronId\":\"$CRON_ID\"}"
     exit 0

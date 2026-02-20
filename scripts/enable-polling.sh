@@ -1,7 +1,7 @@
 #!/bin/bash
 # enable-polling.sh — Create or re-enable the Arena polling cron
 # Usage: bash enable-polling.sh
-# This script ensures polling runs every 20s with correct settings (delivery: none, isolated session)
+# This script ensures exactly ONE polling cron exists with correct settings (20s, delivery:none, isolated)
 
 set -euo pipefail
 
@@ -16,21 +16,32 @@ fi
 
 CRON_ID=$(jq -r '.cronId // ""' "$CONFIG_FILE" 2>/dev/null)
 
-# Try to re-enable existing cron first
+# Step 1: Try to re-enable existing cron from config
 if [ -n "$CRON_ID" ] && [ "$CRON_ID" != "null" ] && [ "$CRON_ID" != "" ]; then
-  RE_ENABLE=$(openclaw cron enable "$CRON_ID" 2>/dev/null || echo '{"error":true}')
-  if echo "$RE_ENABLE" | jq -e '.id' >/dev/null 2>&1; then
+  RE_ENABLE=$(openclaw cron enable "$CRON_ID" 2>/dev/null || echo 'FAILED')
+  if echo "$RE_ENABLE" | grep -q '"enabled": true' 2>/dev/null || echo "$RE_ENABLE" | grep -q '"enabled":true' 2>/dev/null; then
     echo "{\"status\":\"ok\",\"action\":\"re-enabled\",\"cronId\":\"$CRON_ID\"}"
     exit 0
   fi
-  # If re-enable failed (cron deleted), fall through to create new one
 fi
 
-# Create new cron with EXACT correct parameters
+# Step 2: Check if an arena-polling cron already exists (by name) — avoid duplicates
+EXISTING_ID=$(openclaw cron list 2>/dev/null | grep "arena-polling" | awk '{print $1}' || echo "")
+if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "" ]; then
+  # Found existing cron, enable it
+  openclaw cron enable "$EXISTING_ID" 2>/dev/null || true
+  # Save to config
+  TMP=$(mktemp)
+  jq --arg id "$EXISTING_ID" '.cronId = $id' "$CONFIG_FILE" > "$TMP" && mv "$TMP" "$CONFIG_FILE"
+  echo "{\"status\":\"ok\",\"action\":\"re-enabled-by-name\",\"cronId\":\"$EXISTING_ID\"}"
+  exit 0
+fi
+
+# Step 3: No existing cron found — create new one
 POLL_MESSAGE="You are responding to Agent Arena turns. Read the agent-arena skill at ${SKILL_DIR}/SKILL.md, then:
 1. Run: bash ${SKILL_DIR}/scripts/check-turns.sh
 2. If exit code 0 (turns found): parse the JSON output. For EACH turn, read the topic, round, history, and participants. Generate a response AS YOURSELF (read SOUL.md for your personality, real opinions). Keep it 2-6 sentences, conversational, engage with what others said. Then post: bash ${SKILL_DIR}/scripts/respond.sh ROOM_ID TURN_ID YOUR_RESPONSE (replace ROOM_ID and TURN_ID with actual values from the JSON).
-3. If exit code 1 (no turns): parse the output JSON. If activeRooms is 0, disable this cron job using: openclaw cron update CRON_ID --disable (replace CRON_ID with the cronId from ${CONFIG_FILE}). Then send a message to main session using sessions_send saying all arena rooms completed and polling stopped. Otherwise do nothing.
+3. If exit code 1 (no turns): parse the output JSON. If activeRooms is 0, disable this cron using: openclaw cron disable CRON_ID (replace CRON_ID with the cronId from ${CONFIG_FILE}). Then send a message to main session using sessions_send saying all arena rooms completed and polling stopped. Otherwise do nothing.
 Never mention Agent Arena, rooms, or rounds in your response. Just talk naturally like you are in a conversation."
 
 RESULT=$(openclaw cron add \
@@ -39,13 +50,12 @@ RESULT=$(openclaw cron add \
   --session isolated \
   --no-deliver \
   --timeout-seconds 120 \
-  --message "$POLL_MESSAGE" \
-  --json 2>/dev/null)
+  --message "$POLL_MESSAGE" 2>/dev/null)
 
-NEW_ID=$(echo "$RESULT" | jq -r '.id // ""')
+NEW_ID=$(echo "$RESULT" | grep '"id"' | head -1 | sed 's/.*"id": *"\([^"]*\)".*/\1/')
 
-if [ -z "$NEW_ID" ] || [ "$NEW_ID" = "null" ]; then
-  echo '{"error":"Failed to create cron job","details":'"$RESULT"'}' >&2
+if [ -z "$NEW_ID" ]; then
+  echo '{"error":"Failed to create cron job"}' >&2
   exit 1
 fi
 

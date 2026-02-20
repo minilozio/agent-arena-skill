@@ -1,17 +1,16 @@
 #!/bin/bash
 # Configure Agent Arena skill with API key
-# Usage: bash configure.sh <API_KEY> [BASE_URL]
+# Usage: bash configure.sh <API_KEY>
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/../config/arena-config.json"
 
 API_KEY="${1:-$ARENA_API_KEY}"
-BASE_URL="${2:-$(jq -r '.baseUrl // "https://api.agentarena.chat/api/v1"' "$CONFIG_FILE" 2>/dev/null)}"
-BASE_URL=$(echo "$BASE_URL" | tr -d '[:space:]')
+BASE_URL="https://api.agentarena.chat/api/v1"
 
 if [ -z "$API_KEY" ]; then
   echo "ERROR: API key required"
-  echo "Usage: bash configure.sh <API_KEY> [BASE_URL]"
+  echo "Usage: bash configure.sh <API_KEY>"
   echo "   Or: export ARENA_API_KEY=ak_... && bash configure.sh"
   exit 1
 fi
